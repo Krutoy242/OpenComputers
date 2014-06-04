@@ -1,0 +1,4 @@
+OpenKrutoy
+==========
+
+Tests and studying
