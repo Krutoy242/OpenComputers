@@ -4,26 +4,27 @@
 -- **   ----------------------------------------------------                       ** --
 -- **                                                                              ** --
 -- **   To start program, write in turte:                                          ** --
--- **   pastebin run GHUv2MCR                                                      ** --
--- **    or                                                                        ** --
+-- **                                                                              ** --
+-- **    For stable version:                                                       ** --
+-- **   pastebin get YxWNp5bZ KrutoyTurtle                                         ** --
+-- **                                                                              ** --
+-- **    For developing version                                                    ** --
 -- **   pastebin get GHUv2MCR KrutoyTurtle                                         ** --
 -- **                                                                              ** --
 -- **   ----------------------------------------------------                       ** --
 -- **   Thanks for this peoples, i use theirs code:                                ** --
 -- **    - AustinKK (OreQuarry Turtle)                                             ** --
 -- **    - NitrogenFingers (NPaintPro)                                             ** --
--- **   ----------------------------------------------------                       ** --
--- **                                                                              ** --
 -- **                                                                              ** --
 -- ********************************************************************************** --
 
 ------------------------------------------------------
 -- Download external libs                           --
 ------------------------------------------------------
-function runExternalCode(url)
+function runExternalCode(url, chunkname)
   local response = http.get(url)
   local filetext = response.readAll()
-  local func,err=loadstring(filetext,"external_loaded")
+  local func,err = loadstring(filetext, chunkname)
 
   if not err then
     setfenv(func,getfenv(1))
@@ -36,11 +37,14 @@ end
 
 -- If you using IDE, you must load some files other way
 IDE = nil
-if(turtle) then
-  --runExternalCode('https://raw.githubusercontent.com/')
+if(term) then
+  runExternalCode('http://pastebin.com/raw.php?i=CHCB8nDz', 'A-Star')
+  runExternalCode('http://pastebin.com/raw.php?i=SNVuJsva', 'KrutoyWrapper')
 else
   IDE = true
   dofile('src/ComputerCraft.lua')
+  dofile('src/AStar.lua')
+  dofile('src/KTurtle.lua')
 end
 
 
@@ -48,7 +52,53 @@ end
 -- Librarys                                         --
 ------------------------------------------------------
 
-
+--do
+--  local bench = {}
+--  local sizeX,sizeY,sizeZ = 10,10,10
+--  local world = World.new(sizeX,sizeY,sizeZ)
+--  math.randomseed(os.time())
+--  
+--  for x = 0, sizeX-1 do
+--    for y = 0, sizeY-1 do
+--      for z = 0, sizeZ-1 do
+--        --prevent the starting square from being blocked
+--        if math.random() > 0.7 and not (x==0 and y==0 and z==0) then
+--          --world.blocked[z][y][x] = true
+--        end
+--      end
+--    end
+--  end
+--  
+--  for x = 1, sizeX-2 do
+--    for y = 1, sizeY-2 do
+--        world.blocked[0][y][x] = true
+--    end
+--  end
+--  
+--  
+--  for i = 0, 100 do
+--    local start = os.time()
+--    AStarFindPath(world, vector.new(), vector.new(sizeX-1,sizeY-1,sizeZ-1))
+--    local ts = os.time() - start
+--    bench[i] = ts
+--  end
+--  local sum = function() local n=0; for k,v in pairs(bench)do n=n+v end return n end
+--  print('Total time: ' .. sum() .. 's')
+--  print('Average time: ' .. sum() / 100 .. 's')
+--  
+--  local crumb2 = AStarFindPath(world, vector.new(), vector.new(sizeX-1,sizeY-1,sizeZ-1))
+--  if crumb2 then 
+--    print('Start: ' .. crumb2.pos.x..","..crumb2.pos.y..","..crumb2.pos.z)
+--    while crumb2.next ~= nil do
+--      crumb2 = crumb2.next
+--      print('Route: ' .. crumb2.pos.x..","..crumb2.pos.y..","..crumb2.pos.z)
+--    end
+--    print('Finished at: ' .. crumb2.pos.x..","..crumb2.pos.y..","..crumb2.pos.z)
+--  else
+--    print('path not found')
+--  end
+--end
+--read()
 
 ------------------------------------------------------
 -- Filling function variables                       --
@@ -107,28 +157,19 @@ fillingFlags = {
 
 --A list of hexidecimal conversions from numbers to hex digits
 local hexnums = { [10] = "a", [11] = "b", [12] = "c", [13] = "d", [14] = "e" , [15] = "f" }
-  
+
 -- Enumeration to store the the different types of message that can be written
 messageLevel = { DEBUG=0, INFO=1, WARNING=2, ERROR=3, FATAL=4 }
- 
+
 -- Enumeration to store names for the 6 directions
-way = { FORWARD=0, RIGHT=1, BACK=2, LEFT=3, UP=4, DOWN=5 }
- 
--- Enumeration of mining states
-miningState = { START=0, LAYER=1, EMPTYCHESTDOWN=2, EMPTYINVENTORY=3 }
+local way = { FORWARD=0, RIGHT=1, BACK=2, LEFT=3, UP=4, DOWN=5 }
+
 
 local maximumGravelStackSupported = 25 -- The number of stacked gravel or sand blocks supported
 local turtleId -- For rednet
 local isWirelessTurtle
-local lastMoveNeededDig = true -- Determines whether the last move needed a dig first
 local logFileName = "KrutoyTurtle.log"
  
--- Variables to store the current location and orientation of the turtle. x is right, left, z is up, down and
--- y is forward, back with relation to the starting orientation. 
-local currOrient = way.FORWARD
-local currMiningState = miningState.START
-local currPos = vector.new() -- Start Pos is 0,0,0
-
 
 -- ********************************************************************************** --
 -- **                                                                              ** --
@@ -147,7 +188,7 @@ local currPos = vector.new() -- Start Pos is 0,0,0
 --===========================================================
 -- Make keys from values
 --===========================================================
-function makeSet (list)
+local function makeSet (list)
   local set = {}
   for _, l in ipairs(list) do set[l] = true end
   return set
@@ -156,7 +197,7 @@ end
 --===========================================================
 -- Clear screen and set cursor to start
 --===========================================================
-function clear()
+local function clear()
    term.clear()
    term.setCursorPos (1,1)
 end
@@ -165,14 +206,14 @@ end
 --===========================================================
 -- Waiting untill user press key
 --===========================================================
-function pressAnyKey()
+local function pressAnyKey()
   local event, param1 = os.pullEvent ("key")
 end
 
 --===========================================================
 -- Writes requestText and wait while user press number key
 --===========================================================
-function readNumberParametr(requestText, from, to)
+local function readNumberParametr(requestText, from, to)
   while true do
      clear()
      print (requestText)
@@ -188,7 +229,7 @@ end
 -- Writes requestText and wait while user type
 -- several words or numbers
 --===========================================================
-function readTable(requestText, canBeSkipped, separator)
+local function readTable(requestText, canBeSkipped, separator)
   local resultStr = ''
  
   while true do
@@ -213,7 +254,7 @@ end
 -- Writes requestText and wait while user type
 -- several numbers
 --===========================================================
-function readTableOfNumbers(requestText, canBeSkipped, numbersCount, separator)
+local function readTableOfNumbers(requestText, canBeSkipped, numbersCount, separator)
   local resultStr = ''
   local result = {}
   for i=1,numbersCount do result[i]=0 end
@@ -247,7 +288,7 @@ end
 -- Writes an output message
 -- Also, working with rednet
 --===========================================================
-function writeMessage(message, msgLevel)
+local function writeMessage(message, msgLevel)
   print(message)
 
   -- If this turtle has a modem, then write the message to red net
@@ -279,7 +320,7 @@ end
 --===========================================================
 -- Reads the next number from a given file
 --===========================================================
-function readNumber(inputFile)
+local function readNumber(inputFile)
 
   local returnVal
   local nextLine = inputFile.readLine()
@@ -293,7 +334,7 @@ end
 --===========================================================
 -- Reads the next number from a given file
 --===========================================================
-function getChar(str, pos)
+local function getChar(str, pos)
   return string.sub(str, pos, pos)
 end
 
@@ -303,7 +344,7 @@ end
 -- Params: hex:?string = the hex digit to be converted
 -- Returns:string A colour value corresponding to the hex, or nil if the character is invalid
 --===========================================================
-function getColourOf(hex)
+local function getColourOf(hex)
   local value = tonumber(hex, 16)
   if not value then return nil end
   value = math.pow(2,value)
@@ -363,408 +404,10 @@ local function loadNFA(path)
   return frames
 end
 
-
--- ********************************************************************************** --
--- **                                                                              ** --
--- **                                                                              ** --
--- **                                                                              ** --
--- **                                                                              ** --
--- **                                                                              ** --
--- **                            Turtle wrappers                                   ** --
--- **                                                                              ** --
--- **                                                                              ** --
--- **                                                                              ** --
--- **                                                                              ** --
--- **                                                                              ** --
--- ********************************************************************************** --
-
-
--- ********************************************************************************** --
--- Turns the turtle (updating the current orientation at the same time)
--- ********************************************************************************** --
-function turtleTurn(turnDir)
- 
-  if (turnDir == way.LEFT) then
-    if (currOrient == way.FORWARD) then
-      currOrient = way.LEFT
-    elseif (currOrient == way.LEFT) then
-      currOrient = way.BACK
-    elseif (currOrient == way.BACK) then
-      currOrient = way.RIGHT
-    elseif (currOrient == way.RIGHT) then
-      currOrient = way.FORWARD
-    else
-      writeMessage ("Invalid currOrient in turtleTurn function", messageLevel.ERROR)
-    end
-
-
-    -- Write the new orientation and turn
-    saveLocation()
-    turtle.turnLeft()
- 
-  elseif (turnDir == way.RIGHT) then
-    if (currOrient == way.FORWARD) then
-      currOrient = way.RIGHT
-    elseif (currOrient == way.LEFT) then
-      currOrient = way.FORWARD
-    elseif (currOrient == way.BACK) then
-      currOrient = way.LEFT
-    elseif (currOrient == way.RIGHT) then
-      currOrient = way.BACK
-    else
-      writeMessage ("Invalid currOrient in turtleTurn function", messageLevel.ERROR)
-    end
- 
-
-    -- Write the new orientation and turn
-    saveLocation()
-    turtle.turnRight()
-  else
-    writeMessage ("Invalid turnDir in turtleTurn function", messageLevel.ERROR)
-  end
-end
- 
--- ********************************************************************************** --
--- Sets the turtle to a specific orientation, irrespective of its current orientation
--- ********************************************************************************** --
-function turtleSetOrientation(newOrient)
-
-  -- Already turned
-  if (currOrient == newOrient) then return true end
-
-
-  -- Wrong parameters - we cant turn up or down
-  if newOrient < 0 or newOrient > way.LEFT then
-    writeMessage ("Invalid newOrient in turtleSetOrientation function", messageLevel.DEBUG)
-    return false
-  end
-  
-  local turn = currOrient - newOrient
-  local turnFnc
-  
-  if turn==1 or turn==-3 then
-    turnFnc = turtle.turnLeft
-  else
-    turnFnc = turtle.turnRight
-  end
-  
-  turn = math.abs(turn)
-  if(turn==3) then turn=1 end
-
-  currOrient = newOrient
-  
-
-  -- Write the new orientation and turn
-  saveLocation()
-  for i=1, turn do
-    turnFnc()
-  end
-  
-end
- 
---===========================================================
--- Dig, depending on direction
---===========================================================
-function turtleDig(direction)
-  if (direction == nil) or (direction == way.FORWARD) then
-    return turtle.dig()
-  elseif(direction == way.DOWN) then
-    return turtle.digDown()
-  elseif(direction == way.UP) then
-    return turtle.digUp()
-  else
-    writeMessage('Wrong direction for turtleDig()', messageLevel.ERROR)
-    return false
-  end
-end
- 
--- ********************************************************************************** --
--- Generic function to move the Turtle (pushing through any gravel or other
--- things such as mobs that might get in the way).
---
--- The only thing that should stop the turtle moving is bedrock. Where this is
--- found, the function will return after 15 seconds returning false
--- ********************************************************************************** --
-function moveTurtle(moveFn, detectFn, digFn, attackFn, compareFn, suckFn, maxDigCount, newX, newY, newZ)
- 
-  local moveSuccess = false
- 
-
-  local prevX, prevY, prevZ
-  prevX = currPos.x
-  prevY = currPos.y
-  prevZ = currPos.z
-
- 
-  -- Flag to determine whether digging has been tried yet. If it has
-  -- then pause briefly before digging again to allow sand or gravel to
-  -- drop
-  local digCount = 0
- 
-    if (lastMoveNeededDig == false) then
-      -- Didn't need to dig last time the turtle moved, so try moving first
- 
-      currPos.x = newX
-      currPos.y = newY
-      currPos.z = newZ
- 
-      moveSuccess = moveFn()
- 
-      -- If move failed, update the co-ords back to the previous co-ords
-      if (moveSuccess == false) then
-        currPos.x = prevX
-        currPos.y = prevY
-        currPos.z = prevZ
-      end
- 
-      -- Don't need to set the last move needed dig. It is already false, if
-      -- move success is now true, then it won't be changed
-    else 
-      -- Try to dig (without doing a detect as it is quicker)
-      local digSuccess = digFn()
-      if (digSuccess == true) then
-        digCount = 1
-      end
- 
-      currPos.x = newX
-      currPos.y = newY
-      currPos.z = newZ
- 
-      moveSuccess = moveFn()
- 
-      if (moveSuccess == true) then
-        lastMoveNeededDig = digSuccess
-      else
-        currPos.x = prevX
-        currPos.y = prevY
-        currPos.z = prevZ
-      end
- 
-    end
- 
-    -- Loop until we've successfully moved
-    if (moveSuccess == false) then
-      while ((moveSuccess == false) and (digCount < maxDigCount)) do
- 
-        -- If there is a block in front, dig it
-        if (detectFn() == true) then
-       
-            -- If we've already tried digging, then pause before digging again to let
-            -- any sand or gravel drop, otherwise check for a chest before digging
-            if(digCount == 0) then
-            
-            else
-              sleep(0.1)
-            end
- 
-            digFn()
-            digCount = digCount + 1
-        else
-           -- Am being stopped from moving by a mob, attack it
-           attackFn()
-        end
- 
-        currPos.x = newX
-        currPos.y = newY
-        currPos.z = newZ
- 
-        -- Try the move again
-        moveSuccess = moveFn()
- 
-        if (moveSuccess == false) then
-          currPos.x = prevX
-          currPos.y = prevY
-          currPos.z = prevZ
-        end
-      end
- 
-      if (digCount == 0) then
-        lastMoveNeededDig = false
-      else
-        lastMoveNeededDig = true
-      end
-    end
- 
-  -- Return the move success
-  return moveSuccess
-end
- 
--- ********************************************************************************** --
--- Move the turtle forward one block (updating the turtle's position)
--- ********************************************************************************** --
-function turtleForward()
- 
-  -- Determine the new co-ordinate that the turtle will be moving to
-  local newX, newY
- 
-  -- Update the current co-ordinates
-  if (currOrient == way.FORWARD) then
-    newY = currPos.y + 1
-    newX = currPos.x
-  elseif (currOrient == way.LEFT) then
-    newX = currPos.x - 1
-    newY = currPos.y
-  elseif (currOrient == way.BACK) then
-    newY = currPos.y - 1
-    newX = currPos.x
-  elseif (currOrient == way.RIGHT) then
-    newX = currPos.x + 1
-    newY = currPos.y
-  else
-    writeMessage ("Invalid currOrient in turtleForward function", messageLevel.ERROR)
-  end
- 
-  local returnVal = moveTurtle(turtle.forward, turtle.detect, turtle.dig, turtle.attack, turtle.compare, turtle.suck, maximumGravelStackSupported, newX, newY, currPos.z)
-
- 
-  return returnVal
-end
-
--- ********************************************************************************** --
--- Move the turtle up one block (updating the turtle's position)
--- ********************************************************************************** --
-function turtleUp()
- 
-  local returnVal = moveTurtle(turtle.up, turtle.detectUp, turtle.digUp, turtle.attackUp, turtle.compareUp, turtle.suckUp, maximumGravelStackSupported, currPos.x, currPos.y, currPos.z + 1)
- 
-  return returnVal
-end
- 
--- ********************************************************************************** --
--- Move the turtle down one block (updating the turtle's position)
--- ********************************************************************************** --
-function turtleDown()
- 
-  local returnVal = moveTurtle(turtle.down, turtle.detectDown, turtle.digDown, turtle.attackDown, turtle.compareDown, turtle.suckDown, 1, currPos.x, currPos.y, currPos.z - 1)
- 
-  return returnVal
-end
- 
--- ********************************************************************************** --
--- Move the turtle back one block (updating the turtle's position)
--- ********************************************************************************** --
-function turtleBack(doNotTurnBack)
- 
-  -- Assume that the turtle will move, and switch the co-ords back if it doesn't
-  -- (do this so that we can write the co-ords to a file before moving)
-  local newX, newY
-  local prevX, prevY
-  prevX = currPos.x
-  prevY = currPos.y
- 
-  -- Update the current co-ordinates
-  if (currOrient == way.FORWARD) then
-    newY = currPos.y - 1
-    newX = currPos.x
-  elseif (currOrient == way.LEFT) then
-    newX = currPos.x + 1
-    newY = currPos.y
-  elseif (currOrient == way.BACK) then
-    newY = currPos.y + 1
-    newX = currPos.x
-  elseif (currOrient == way.RIGHT) then
-    newX = currPos.x - 1
-    newY = currPos.y
-  else
-    writeMessage ("Invalid currOrient in turtleBack function", messageLevel.ERROR)
-  end
- 
-  -- First try to move back using the standard function
-  currPos.x = newX
-  currPos.y = newY
-  local returnVal = turtle.back()
- 
-  if (returnVal == false) then
-    -- Didn't move. Reset the co-ordinates to the previous value
-    currPos.x = prevX
-    currPos.y = prevY
- 
-    turtle.turnRight()
-    turtle.turnRight()
- 
-    -- Try to move by using the forward function (note, the orientation will be set as
-    -- the same way as this function started because if the function stops, that is the
-    -- way that we want to consider the turtle to be pointing)
-    returnVal = moveTurtle(turtle.forward, turtle.detect, turtle.dig, turtle.attack, turtle.compare, turtle.suck, maximumGravelStackSupported, newX, newY, currPos.z)
- 
-    if not doNotTurnBack then
-      turtle.turnRight()
-      turtle.turnRight()
-    end
-  end
-   
-  return returnVal
-end
-
-
---===========================================================
--- Move turtle on needed position
--- Simple move by x, then y, then z 
---===========================================================
-function turtleGoTo(x,y,z)
-  if not x then x=currPos.x end
-  if not y then y=currPos.y end
-  if not z then z=currPos.z end
-
-  local targetVec = vector.new(x,y,z) - currPos
-  
-
-  -- X
-  if (targetVec.x<0 and currOrient==way.RIGHT)   or
-     (targetVec.x>0 and currOrient==way.LEFT)    then
-     while currPos.x ~= x do
-       turtleBack(true)
-     end
-  end
-  
-  while (x<currPos.x) do
-    turtleSetOrientation(way.LEFT)
-    turtleForward()
-  end
-  while (x>currPos.x) do
-    turtleSetOrientation(way.RIGHT)
-    turtleForward()
-  end
-  
-  
-  -- Y
-  if(targetVec.y<0 and currOrient==way.FORWARD) or
-    (targetVec.y>0 and currOrient==way.BACK)    then
-     while currPos.y ~= y do
-       turtleBack(true)
-     end
-  end
-  
-  while (y<currPos.y) do
-    turtleSetOrientation(way.BACK)
-    turtleForward()
-  end
-  while (y>currPos.y) do
-    turtleSetOrientation(way.FORWARD)
-    turtleForward()
-  end
-  
-  
-  -- Z
-  while (z<currPos.z) do
-    turtleDown()
-  end
-  while (z>currPos.z) do
-    turtleUp()
-  end
-end
-
---===========================================================
--- Move turtle on needed point 
---===========================================================
-function turtleGoToP(point)
-  turtleGoTo(point.x, point.y, point.z)
-end
-
 --===========================================================
 -- Just leave numbers in pattern, if in blacklist is 0
 --===========================================================
-function selectPatternByBlacklist(pattern, blacklist)
+local function selectPatternByBlacklist(pattern, blacklist)
   local resultPattern = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
   for i=1, 16 do
       if(blacklist[i] == 0) then resultPattern[i] = pattern[i] end
@@ -775,7 +418,7 @@ end
 --===========================================================
 -- Searching if wee have needed item in inventory
 --===========================================================
-function findInSlotsArrayByPattern(arr, n, blacklist)
+local function findInSlotsArrayByPattern(arr, n, blacklist)
   blacklist = blacklist or {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
   
   -- Set indexes to 0 if blacklist here is 1
@@ -819,8 +462,8 @@ function reloadForFilling(slotsPattern, blacklistPattern)
   -- This is blocks that we dont using for building
   for i=1, 16 do
     if( blacklistPattern[i] > 0) then
-      turtleGoTo(0,0,0)
-      turtleSetOrientation(way.LEFT)
+      Turtle.goTo(0,0,0)
+      Turtle.setOrient(way.LEFT)
       
       turtle.select(i)
       turtle.drop()
@@ -831,8 +474,8 @@ function reloadForFilling(slotsPattern, blacklistPattern)
   for i=1, 16 do
     local itemSpace = turtle.getItemSpace(i)
     if( itemSpace > 0  and (slotsPattern[i] > 0)) then
-      turtleGoTo((slotsPattern[i]-1)*2, 0, 0)
-      turtleSetOrientation(way.BACK)
+      Turtle.goTo((slotsPattern[i]-1)*2, 0, 0)
+      Turtle.setOrient(way.BACK)
       turtle.select(i)
       if( turtle.suck(itemSpace) ) then
         -- Yes, we sucked something. Lets write it in pattern
@@ -844,80 +487,6 @@ function reloadForFilling(slotsPattern, blacklistPattern)
   return reloadedPattern
 end
 
--- ********************************************************************************** --
--- Place item in front of turtle. Check if item already placed.
--- ********************************************************************************** --
-function placeBlock(itemSlot, direction)
-  
-  local detectFnc, compareFnc, placeFnc, attackFnc =
-        turtle.detect, turtle.compare, turtle.place,turtle.attack
-  
-  if( direction == way.UP ) then
-    detectFnc, compareFnc, placeFnc, attackFnc =
-    turtle.detectUp, turtle.compareUp, turtle.placeUp, turtle.attackUp
-  elseif( direction == way.DOWN )then
-    detectFnc, compareFnc, placeFnc, attackFnc =
-    turtle.detectDown, turtle.compareDown, turtle.placeDown, turtle.attackDown
-  end
-  
-  -- slotsPattern is array of 16 nubbers that represent
-  -- what kind of blocks lying in what kind of
-  if(itemSlot == nil) then
-    selectNonEmptySlot()
-  else
-    turtle.select(itemSlot)
-  end
-  
-  local placeSucces = false
-  local digCount = 0
-  local maxDigCount = 20
-
-  
-  -- Check if there is already item  then try to place
-  placeSucces = placeFnc()
-  
-  if((not placeSucces) and detectFnc()) then
-    if(compareFnc()) then
-      -- Item that we must set already here
-      return true
-    else
-      -- There is something else. Dig/Attack and place item
-      turtleDig(direction)
-      digCount = digCount + 1
-    end
-  end
-  
-  -- Now try to place item until item will placed
-  while ((placeSucces == false) and (digCount < maxDigCount)) do
-    if (detectFnc()) then
-      if(digCount > 0) then
-        sleep(0.1)
-      end
-      turtleDig(direction)
-      digCount = digCount + 1
-    else
-       -- Am being stopped from moving by a mob, attack it
-       attackFnc()
-    end
-    -- Try the place again
-    placeSucces = placeFnc()
-  end
-  
-  return placeSucces
-end
-
--- ********************************************************************************** --
--- Select non-empty slot
--- ********************************************************************************** --
-function selectNonEmptySlot()
-  for i=1, 16 do
-    if( turtle.getItemCount(i) > 0) then
-      turtle.select(i)
-      return true
-    end
-  end
-  return false
-end
 
 -- ********************************************************************************** --
 -- Get slot pattern.
@@ -959,11 +528,6 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
   if not patternId then patternId = 'plain' end -- Default pattern index - plain fill
   if not isGoBackAfterFill then isGoBackAfterFill = true end -- Default returning - yes, go back
 
-  -- Pattern sizes per axis
-  local ptSzX = #fillPattern[patternId][1][1]
-  local ptSzY = #fillPattern[patternId][1]
-  local ptSzZ = #fillPattern[patternId]
- 
   -- There we will storage what slots was deplited, out of building blocks
   -- 0: slot in use, have blocks.
   -- 1: slot deplited, haven't blocks or have thrash
@@ -971,8 +535,7 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
   
   local totalVolume = sizeX*sizeY*sizeZ -- Total volume of blocks
   local vol = {{{}}} -- 3d array of whole volume filling territory
-  
-  
+ 
   -- Statistics
   local totalBlocksToPlace    = 0  -- Total count of blocks that must be placed
   local totalBlocksCountArray = {} -- Blocks count by indexes
@@ -981,9 +544,58 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
 
   -- ==============================
   -- Preparing
-  -- At first, we must make a large
-  -- array of all blocks in volume
   -- ==============================
+  
+  -- Preparing world for path finding
+  local wrldSize = vector.new(sizeX+pos.x, sizeY+pos.y, sizeZ+pos.z)
+  local localWorld = World.new(wrldSize.x, wrldSize.y, wrldSize.z)
+  
+  -- Block all cells in outside of filling volume
+  for z = 0, wrldSize.z-1 do
+    for y = 0, wrldSize.y-1 do
+      for x = 0, wrldSize.x-1 do
+        -- Prevent the starting square from being blocked
+        if not((z==0 and y==0) or (x==0 and z==0) or
+           (x>=pos.x and y>=pos.y and z>=pos.z))then -- FIXME: Fix condition to right
+          localWorld.blocked[z][y][x] = true
+        end
+      end
+    end
+  end
+    
+    
+  -- Pattern sizes per axis
+  local ptSzX, ptSzY, ptSzZ = 0,0,0
+  
+  -- Get sizes of pattern
+  local zCount = #fillPattern[patternId]
+  ptSzZ = zCount
+  for z=1, zCount do
+    local yCount = #fillPattern[patternId][z]
+    if ptSzY < yCount then ptSzY = yCount end
+    for y=1, yCount do
+      local xCount = #fillPattern[patternId][z][y]
+      if ptSzX < xCount then ptSzX = xCount end
+    end
+  end
+  
+  -- Write new pattern
+  local parsedPattern = {}
+  for z=1, ptSzZ do
+    parsedPattern[z] = {}
+    for y=1, ptSzY do
+      parsedPattern[z][y] = {}
+      for x=1, ptSzX do
+        parsedPattern[z][y][x] = tonumber(getChar(fillPattern[patternId][z][y], x))
+      end
+    end
+  end
+
+ 
+ 
+  
+  -- We must make a large
+  -- array of all blocks in volume
   for O=0, totalVolume-1 do
     local u, v, w
     u = math.floor(O/(sizeX*sizeY)) -- z
@@ -1016,7 +628,7 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
 
 
     -- Get block index from pattern, demands on position of turtle
-    local blockIndex = tonumber(getChar(fillPattern[patternId][ptZ+1][ptY+1], ptX+1))
+    local blockIndex = parsedPattern[ptZ+1][ptY+1][ptX+1]
    
     -- When we use 'sides' or 'corners' flags, we avoid all blocks inside volume
     if fillFlags['sides'] or fillFlags['corners'] then
@@ -1111,7 +723,7 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
   
   -- Compute slots pattern. Pattern shows what block index in whitch slot
   local slotsPattern = getSlotsPattern() 
-  local startPos = vector.new(currPos.x, currPos.y, currPos.z)
+  local startPos = vector.new(Turtle.pos.x, Turtle.pos.y, Turtle.pos.z)
 
   
   -- Function same as GoTo, but consider position of building and incremental shifting
@@ -1126,12 +738,12 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
     local changeVec = pos + shift    
     
     -- nil means we dont need change current position
-    if not x then x = currPos.x-changeVec.x end
-    if not y then y = currPos.y-changeVec.y end
-    if not z then z = currPos.z-changeVec.z end
+    if not x then x = Turtle.pos.x-changeVec.x end
+    if not y then y = Turtle.pos.y-changeVec.y end
+    if not z then z = Turtle.pos.z-changeVec.z end
 
     local targetPos = vector.new(x,y,z) + changeVec
-    turtleGoToP(targetPos)
+    Turtle.goTo(targetPos)
   end
 
 
@@ -1140,8 +752,8 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
   local backToStartFnc = function(msg)
     writeMessage(msg, messageLevel.ERROR)
     
-    turtleGoTo(0,0,0)
-    turtleSetOrientation(way.FORWARD)
+    Turtle.pathTo(localWorld, 0,0,0)
+    Turtle.setOrient(way.FORWARD)
     
     pressAnyKey()
   end
@@ -1149,15 +761,10 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
   -- Go to start and try reload while accomplished
   local reloadFnc = function(blockIndex)
   
-    -- Up over structure if volume
-    if(currPos.y ~= 0) then 
-      turtleGoTo(currPos.x, currPos.y, sizeZ+1)
-    end
-  
     local isReloaded = false
     
     while isReloaded==false do
-      turtleGoTo(0, 0, 0)
+      Turtle.pathTo(localWorld, 0, 0, 0)
       local reloadedPattern = reloadForFilling(slotsPattern, blacklistPattern)
      
       -- If some slots was not reloaded, leave them in blacklist
@@ -1191,10 +798,16 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
           local slotWithNeededItem = findInSlotsArrayByPattern(slotsPattern, blockIndex, blacklistPattern)
           if(slotWithNeededItem ~= 0) then
             fillGoToFnc(x,y,z)
-            if(orient)then turtleSetOrientation(orient) end -- Can be nil - orientation don't matter
+            if(orient)then Turtle.setOrient(orient) end -- Can be nil - orientation don't matter
             
             -- We have block and can put it on place
-            placeBlock(slotWithNeededItem, direct)
+            local placeSucces = Turtle.place(slotWithNeededItem, direct)
+            
+            -- Block this cell in world, make it unable to go throught
+            if(placeSucces == true)then
+              local blockPos = Turtle.getRelativeCoord(direct)
+              localWorld.blocked[blockPos.z][blockPos.y][blockPos.x] = true
+            end
            
             -- If slot was emptyed, we must note, that now there will be thrash
             -- Each next time when turtle dig, empty slot will filling
@@ -1205,15 +818,12 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
               if( findInSlotsArrayByPattern(slotsPattern, blockIndex, blacklistPattern) == 0)then
                 -- No avaliable blocks to build!
                 -- Save coords, reload and return
-                local buildProgressStopPos = vector.new(currPos.x, currPos.y, currPos.z)
-                local stopOrient = currOrient
+                local stopPosX,stopPosY,stopPosZ = Turtle.pos.x, Turtle.pos.y, Turtle.pos.z
                 
                 reloadFnc(blockIndex)
                 
                 -- Go back to work
-                turtleGoTo(0, 0, 0)
-                turtleGoTo(0, 0, sizeZ+1)
-                turtleGoToP(buildProgressStopPos)
+                Turtle.pathTo(localWorld, stopPosX,stopPosY,stopPosZ)
               end
             end
           else
@@ -1224,10 +834,10 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
           end
         else -- blockIndexToPlace == 0
           fillGoToFnc(x,y,z)
-          if(orient)then turtleSetOrientation(orient) end -- Can be nil - orientation don't matter
+          if(orient)then Turtle.setOrient(orient) end -- Can be nil - orientation don't matter
           
           -- Remove block here and do nothing
-          turtleDig(direct)
+          Turtle.dig(direct)
         end
       else -- blockIndexToPlace == nil
         
@@ -1276,13 +886,14 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
   -- And most awesome and fast filling method
   -- It filling 3 blocks per move
   else
-    local zStepsCount = math.ceil(sizeZ/3)-1 -- Count of levels, where robot moves horisontally
+    local zStepsCount    = math.ceil(sizeZ/3)-1 -- Count of levels, where robot moves horisontally
     local lastZStepIsCap = (sizeZ%3 == 1) -- The top level of volume is last level where turtle moves hor-ly
     local zLastStepLevel = zStepsCount*3+(lastZStepIsCap and 0 or 1) -- Z level where turtle will move last
     
     for _z=0, zStepsCount do
-      for y=0, sizeY-1 do
-        for x=0, sizeX-1 do
+      for _y=0, sizeY-1 do
+        for _x=0, sizeX-1 do
+          local x,y = _x,_y
           x = sizeX - x - 1 -- Revert X coordinates. Filling will be from right to left
           
           local z = _z*3+1
@@ -1328,7 +939,7 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
           
           -- Go forward if we finished the line
           if x==0 and ((_z%2==0 and y<sizeY-1) or (_z%2==1 and y>0)) then
-            turtleGoTo(currPos.x, currPos.y-horisontShift, currPos.z)
+            Turtle.goTo(Turtle.pos.x, Turtle.pos.y-horisontShift, Turtle.pos.z)
           end
           
           -- Move up and fill bocks down, if we advance to next Z level
@@ -1370,11 +981,11 @@ function fill(sizeX, sizeY, sizeZ, patternId, pos, isGoBackAfterFill, fillFlags)
   -- ==============================
   -- Finishing
   -- ==============================
- 
+  
   -- Now we finished filling territory. Just go home
   if isGoBackAfterFill == true then
-    turtleGoTo(startPos.x, startPos.y, startPos.z)
-    turtleSetOrientation(way.FORWARD)
+    Turtle.goTo(startPos.x, startPos.y, startPos.z)
+    Turtle.setOrient(way.FORWARD)
   end
   
   return true
@@ -1428,7 +1039,7 @@ function init()
  
   local welcomingText = 
 [[=======================================
-== Krutoy Turtle - universal builder ==
+== Krutoy Turtle - universal tool    ==
 =======================================
 ]]
   while true do
@@ -1446,7 +1057,7 @@ function init()
     local mode = startupMode[result]
    
    
-    if(mode == 'Refuel lava lake') then
+    if(mode == 'Lake drying') then
       while turtle.getItemCount(1) == 0 do
           clear()
           print('Place buket in first slot')
@@ -1460,12 +1071,12 @@ function init()
       
       turtle.select(1)
       turtle.refuel()
-      local startPos = vector.new(currPos.x,currPos.y,currPos.z)
+      local startPos = vector.new(Turtle.pos.x,Turtle.pos.y,Turtle.pos.z)
       for z=0,sizeZ-1 do
         for x=0,sizeX-1 do
           for y=0,sizeY-1 do
             if(x%2==1) then y = sizeY - y - 1 end -- Ping-pong
-            turtleGoTo(x,y+1,-z)
+            Turtle.goTo(x,y+1,-z)
             turtle.placeDown()
             turtle.refuel()
             
@@ -1474,9 +1085,9 @@ function init()
           end
         end
       end
-      turtleGoTo(nil, nil, startPos.z)
-      turtleGoToP(startPos)
-      turtleSetOrientation(way.FORWARD)
+      Turtle.goTo(nil, nil, startPos.z)
+      Turtle.goTo(startPos)
+      Turtle.setOrient(way.FORWARD)
     end
    
      
@@ -1518,10 +1129,10 @@ function init()
         if(result) then fillFlags = makeSet(result) end
       else
         sizeX,sizeY,sizeZ, pattern, pos, fillFlags =
-            5, 5, 9,'BoxGrid', vector.new(), {}
+            5, 5, 9,'BoxGrid', pos, {}
       end
-     
-       
+      
+      
       ---------------------------------------
       fill(sizeX,sizeY,sizeZ, pattern, pos, true, fillFlags)
     end
