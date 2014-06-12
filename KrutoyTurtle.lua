@@ -18,87 +18,26 @@
 -- **                                                                              ** --
 -- ********************************************************************************** --
 
-------------------------------------------------------
--- Download external libs                           --
-------------------------------------------------------
-function runExternalCode(url, chunkname)
-  local response = http.get(url)
-  local filetext = response.readAll()
-  local func,err = loadstring(filetext, chunkname)
-
-  if not err then
-    setfenv(func,getfenv(1))
-    func()
-  else
-    error(err)
-  end
-end
-
-
--- If you using IDE, you must load some files other way
-IDE = nil
-if(term) then
-  runExternalCode('http://pastebin.com/raw.php?i=CHCB8nDz', 'A-Star')
-  runExternalCode('http://pastebin.com/raw.php?i=SNVuJsva', 'KrutoyWrapper')
-else
-  IDE = true
-  dofile('src/ComputerCraft.lua')
-  dofile('src/AStar.lua')
-  dofile('src/KTurtle.lua')
-end
-
 
 ------------------------------------------------------
--- Librarys                                         --
+-- Fun                                              --
 ------------------------------------------------------
 
---do
---  local bench = {}
---  local sizeX,sizeY,sizeZ = 10,10,10
---  local world = World.new(sizeX,sizeY,sizeZ)
---  math.randomseed(os.time())
---  
---  for x = 0, sizeX-1 do
---    for y = 0, sizeY-1 do
---      for z = 0, sizeZ-1 do
---        --prevent the starting square from being blocked
---        if math.random() > 0.7 and not (x==0 and y==0 and z==0) then
---          --world.blocked[z][y][x] = true
---        end
---      end
---    end
---  end
---  
---  for x = 1, sizeX-2 do
---    for y = 1, sizeY-2 do
---        world.blocked[0][y][x] = true
---    end
---  end
---  
---  
---  for i = 0, 100 do
---    local start = os.time()
---    AStarFindPath(world, vector.new(), vector.new(sizeX-1,sizeY-1,sizeZ-1))
---    local ts = os.time() - start
---    bench[i] = ts
---  end
---  local sum = function() local n=0; for k,v in pairs(bench)do n=n+v end return n end
---  print('Total time: ' .. sum() .. 's')
---  print('Average time: ' .. sum() / 100 .. 's')
---  
---  local crumb2 = AStarFindPath(world, vector.new(), vector.new(sizeX-1,sizeY-1,sizeZ-1))
---  if crumb2 then 
---    print('Start: ' .. crumb2.pos.x..","..crumb2.pos.y..","..crumb2.pos.z)
---    while crumb2.next ~= nil do
---      crumb2 = crumb2.next
---      print('Route: ' .. crumb2.pos.x..","..crumb2.pos.y..","..crumb2.pos.z)
---    end
---    print('Finished at: ' .. crumb2.pos.x..","..crumb2.pos.y..","..crumb2.pos.z)
---  else
---    print('path not found')
---  end
---end
---read()
+--[[
+
+    ____
+\  /o o \  /
+ \|  ~   |/
+   \____/
+
+
+ ,+---+
++---+'| z=9999
+|^_^| +
++---+' y=9999
+ x=9999
+
+]]
 
 ------------------------------------------------------
 -- Filling function variables                       --
@@ -1138,6 +1077,3 @@ function init()
     end
   end
 end
-
- 
-init()
