@@ -45,7 +45,7 @@ function KUI.drawText(text, x,y, w,h, align)
   align = align or 'center'
   
   -- String params
-  local textLinesCount = select(2, text:gsub('\n', '\n'))
+  local textLinesCount = 1 + select(2, text:gsub('\n', '\n'))
   
   -- Top spaces
   local vertSpace = (h-textLinesCount)/2
@@ -63,7 +63,7 @@ function KUI.drawText(text, x,y, w,h, align)
   
   -- Write lines 
   local currLine = 0
-  for l in text:gmatch('\n') do
+  for l in text:gmatch('.+') do
     local margin = {0,0} -- Spaces from left and right
     local horisSpace = (w - #l)
     
@@ -94,7 +94,7 @@ function KUI.drawPanel(x,y, w,h, borderStyle)
   term.write(styleArr[3]..repeatChar(styleArr[6], w-2)..styleArr[4])
   
   -- Vertical lines
-  for i=0,w-3 do
+  for i=0,h-3 do
     term.setCursorPos(x, y+i+1)
     term.write(styleArr[7])
     term.setCursorPos(x+w-1, y+i+1)
@@ -107,7 +107,7 @@ end
 function KUI.drawTextPanel(text, x,y, w,h, borderStyle, align)
   KUI.drawPanel(x,y, w,h, borderStyle)
   
-  KUI.drawText(text, x+2,y+1, w-4,h-2, align)
+  KUI.drawText(text, x+2,y+1, w-2,h, align)
 end
 
 
@@ -142,9 +142,9 @@ function KUI.draw()
     elseif obj.type == '' then
       
     elseif obj.type == '' then
-    
+      
     else
-    
+      
     end
     
     -- This object is selected and selectable
@@ -153,6 +153,7 @@ function KUI.draw()
     end
     
   end
+  sleep(0)
 end
 
 function KUI.navigate()
@@ -184,80 +185,4 @@ function KUI.navigate()
     end
   end
   
-end
-
--- ********************************************************************************** --
--- **                                   Menu                                       ** --
--- ********************************************************************************** --
-
-function KUI.drawMenu(menuTable, cursor, offset)
-  local xlim, ylim = term.getSize()
-  --if xlim < 3 or (ylim < 3 and #menuTable > 2) then
-  --  return nil, "Not enough space to draw menu!"
-  --end
-  term.clear()
-  offset = offset or 1
-  term.setCursorPos(3, 1)
-  if offset > 1 then
-    term.write("/\\")
-  else
-    term.write(string.sub(menuTable[1], 1, xlim - 2))
-  end
-  for i=1, math.min(ylim - 2,#menuTable - 1) do
-    term.setCursorPos(3, i + 1)
-    term.write(string.sub(menuTable[offset + i], 1, xlim - 2))
-  end
-  if #menuTable >= ylim then
-    term.setCursorPos(3, ylim)
-    if #menuTable > offset + ylim - 1 then
-      term.write("\\/")
-    else
-      term.write(string.sub(menuTable[#menuTable], 1, xlim - 2))
-    end
-  end
-  term.setCursorPos(1, cursor - offset + 1)
-  term.write(">")
-end
-
-
-function KUI.menuSelect(menuTable)
-  local cursor, offset = 1, 1
-  drawMenu(menuTable, cursor, offset)
-  while true do
-    local e, p1, p2, p3 = os.pullEvent()
-    if e == "key" then
-      --up
-      if p1 == 200 then
-        if cursor - offset + 1 > 2 or (cursor > 1 and offset ==  1) then
-          term.setCursorPos(1, cursor - offset + 1)
-          term.write(" ")
-          cursor = cursor - 1
-          term.setCursorPos(1, cursor - offset + 1)
-          term.write(">")
-        elseif cursor - offset + 1 == 2 and offset > 1 then
-          offset = offset - 1
-          cursor = cursor - 1
-          drawMenu(menuTable, cursor, offset)
-        end
-      --down
-      elseif p1 == 208 then
-        _, ylim = term.getSize()
-        if cursor < #menuTable and (cursor - offset + 1 < ylim - 1 or #menuTable <= ylim or (cursor == #menuTable - 1 and cursor - offset + 1 == ylim - 1)) then
-          term.setCursorPos(1, cursor - offset + 1)
-          term.write(" ")
-          cursor = cursor + 1
-          term.setCursorPos(1, cursor - offset + 1)
-          term.write(">")
-        elseif cursor < #menuTable and cursor - offset + 1 == ylim - 1 then
-          offset = offset + 1
-          cursor = cursor + 1
-          drawMenu(menuTable, cursor, offset)
-        end
-      elseif p1 == 28 then
-        return cursor
-      end
-    elseif e == "window_resize" then
-      drawMenu(menuTable, cursor, offset)
-    end
-  end
 end
