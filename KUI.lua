@@ -117,7 +117,7 @@ function KUI.add(obj)
   obj.tabId  = #KUI.items
   obj.isSelected = false
   
-  KUI.items:insert(obj)
+  table.insert(KUI.items, obj)
 end
 
 function KUI.setWindow(window)

@@ -1032,7 +1032,7 @@ function main()
   -- Main menu
   -- ==============================
   local mainMenuWindow = {} 
-  mainMenuWindow:insert({ id='welcomeLabel', type='textPanel', text='KRUTOY TURTLE',
+  table.insert(mainMenuWindow,{ id='welcomeLabel', type='textPanel', text='KRUTOY TURTLE',
       x=3,y=2, w=scrW-6,h=5, borderStyle='standart', align='center'})
   
   local maiMenuBths = { {id='menuBtn_fill', text='FILL (omg, its awesome!!!)'},
@@ -1040,12 +1040,12 @@ function main()
   
   local k=0
   for _,v in pairs(maiMenuBths) do
-    mainMenuWindow:insert({ id=v.id, type='button', text=v.text,
+    table.insert(mainMenuWindow,{ id=v.id, type='button', text=v.text,
         x=5,y=9+k*4, w=scrW-10,h=1, borderStyle='none', align='center'})
         
     k = k + 1
   end
-  mainMenuWindow:insert({ id='menuBtn_exit', type='button', text='EXIT',
+  table.insert(mainMenuWindow,{ id='menuBtn_exit', type='button', text='EXIT',
       x=5,y=scrH-3, w=scrW-10,h=1, borderStyle='none', align='center'})
 
          
@@ -1056,22 +1056,22 @@ function main()
       x=scrW-12,y=scrH-2,w=10,h=1, borderStyle='none', align='center'}
   
   local fillOptionsWindow = {} 
-  fillOptionsWindow:insert({ id='optionsLabel', type='textPanel', text='Fill options',
+  table.insert(fillOptionsWindow,{ id='optionsLabel', type='textPanel', text='Fill options',
       x=0,y=0, w=scrW,h=3, borderStyle='standart', align='center'})
       
-  fillOptionsWindow:insert({ id='btn_pattern', type='button', text='Pattern: ""',
+  table.insert(fillOptionsWindow,{ id='btn_pattern', type='button', text='Pattern: ""',
       x=0,y=5, w=scrW,h=3, borderStyle='none', align='left'})
-  fillOptionsWindow:insert({ id='btn_size', type='button',    text='   Size: 0 0 0',
+  table.insert(fillOptionsWindow,{ id='btn_size', type='button',    text='   Size: 0 0 0',
       x=0,y=8, w=scrW,h=3, borderStyle='none', align='left'})
-  fillOptionsWindow:insert({ id='btn_flags', type='button',   text='  Flags: _',
+  table.insert(fillOptionsWindow,{ id='btn_flags', type='button',   text='  Flags: _',
       x=0,y=12,w=scrW,h=3, borderStyle='none', align='left'})
-  fillOptionsWindow:insert(nextBtn)
+  table.insert(fillOptionsWindow,nextBtn)
   
   -- ==============================
   -- Patterns
   -- ==============================
   local patternsWindow = {}
-  patternsWindow:insert({ id='patternsLabel', type='textPanel', text='Select pattern',
+  table.insert(patternsWindow,{ id='patternsLabel', type='textPanel', text='Select pattern',
       x=0,y=0, w=scrW,h=3, borderStyle='standart', align='center'})
   
   
