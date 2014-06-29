@@ -17,7 +17,7 @@ local borderStylesStr = {
 local borderStyles = {}
 for k,v in pairs(borderStylesStr) do
   borderStyles[k] = {}
-  local styleStr = borderStylesStr[borderStyle]
+  local styleStr = v
   for i = 1, #styleStr do
     borderStyles[k]:insert(styleStr:sub(i,i))
   end
