@@ -165,10 +165,27 @@ local function readNumberParametr(requestText, from, to)
 end
 
 --===========================================================
+-- 
+--===========================================================
+local function readTable(separator)
+  local resultStr = read()
+  if resultStr ~= '' then
+    local result = {}
+    local i=1
+    for v in string.gmatch(resultStr, separator) do
+      result[i] = v
+      i = i+1
+    end
+    return result
+  end
+  return nil
+end
+
+--===========================================================
 -- Writes requestText and wait while user type
 -- several words or numbers
 --===========================================================
-local function readTable(requestText, canBeSkipped, separator)
+local function readTableRequest(requestText, canBeSkipped, separator)
   local resultStr = ''
  
   while true do
@@ -200,7 +217,7 @@ local function readTableOfNumbers(requestText, canBeSkipped, numbersCount, separ
  
  
   while true do
-    local returnedResult = readTable(requestText, canBeSkipped, separator)
+    local returnedResult = readTableRequest(requestText, canBeSkipped, separator)
    
     if not returnedResult and canBeSkipped == true then
       return result
@@ -211,6 +228,41 @@ local function readTableOfNumbers(requestText, canBeSkipped, numbersCount, separ
           result[i] = tonumber(returnedResult[i])
         else
           print(returnedResult[i]..' is not number!')
+          sleep(1)
+          isAllNumbers=false
+        end
+      end
+     
+      if isAllNumbers == true then
+        return result
+      end
+    end
+  end
+end
+
+--===========================================================
+-- Writes requestText and wait while user type
+-- several numbers
+--===========================================================
+local function readNumbersInput(cursorX, cursorY, canBeSkipped, numbersCount, separator)
+  local result = {}
+  for i=1,numbersCount do result[i]=0 end
+  
+
+  while true do
+    term.setCursorPos(cursorX, cursorY)
+    term.clearLine()
+    local returnedResult = readTable(separator)
+   
+    if not returnedResult and canBeSkipped == true then
+      return result
+    elseif(returnedResult)then
+      local isAllNumbers = true
+      for i=1,numbersCount do
+        if(type(tonumber(returnedResult[i])) == "number") then
+          result[i] = tonumber(returnedResult[i])
+        else
+          term.write(returnedResult[i]..' is not number!')
           sleep(1)
           isAllNumbers=false
         end
@@ -950,8 +1002,9 @@ startupMode = {
 }
 
 
-function init()
+function main()
 
+  -- ## Test function ##
   -- add to patterns all .nfa files
   local allFiles = fs.list('')
   local only_nfa = {}
@@ -961,50 +1014,86 @@ function init()
     end
   end
   
-  
+  -- ## Test function ##
   -- Detect whether this is a wireless turtle, and if so, open the modem
   local peripheralConnected = peripheral.getType("right")
   if (peripheralConnected == "modem") then
     isWirelessTurtle = true
-  end
-   
-  -- If a wireless turtle, open the modem
-  if (isWirelessTurtle == true) then
     turtleId = os.getComputerLabel()
     rednet.open("right")
   end
 
-  clear()
- 
-  local welcomingText = 
-[[=======================================
-== Krutoy Turtle - universal tool    ==
-=======================================
-]]
+
+   
+  -- Get screen params
+  local scrW, scrH = term.getSize()
+  
+  -- ==============================
+  -- Main menu
+  -- ==============================
+  local mainMenuWindow = {} 
+  mainMenuWindow:insert({ id='welcomeLabel', type='textPanel', text='KRUTOY TURTLE',
+      x=3,y=2, w=scrW-6,h=5, borderStyle='standart', align='center'})
+  
+  local maiMenuBths = { {id='menuBtn_fill', text='FILL (omg, its awesome!!!)'},
+                        {id='menuBtn_lake', text='Refuel from Lake'} }
+  
+  local k=0
+  for _,v in pairs(maiMenuBths) do
+    mainMenuWindow:insert({ id=v.id, type='button', text=v.text,
+        x=5,y=9+k*4, w=scrW-10,h=1, borderStyle='none', align='center'})
+        
+    k = k + 1
+  end
+  mainMenuWindow:insert({ id='menuBtn_exit', type='button', text='EXIT',
+      x=5,y=scrH-3, w=scrW-10,h=1, borderStyle='none', align='center'})
+
+         
+  -- ==============================
+  -- Fill options
+  -- ==============================
+  local nextBtn = { id='btn_next', type='button',   text='Next>>',
+      x=scrW-12,y=scrH-2,w=10,h=1, borderStyle='none', align='center'}
+  
+  local fillOptionsWindow = {} 
+  fillOptionsWindow:insert({ id='optionsLabel', type='textPanel', text='Fill options',
+      x=0,y=0, w=scrW,h=3, borderStyle='standart', align='center'})
+      
+  fillOptionsWindow:insert({ id='btn_pattern', type='button', text='Pattern: ""',
+      x=0,y=5, w=scrW,h=3, borderStyle='none', align='left'})
+  fillOptionsWindow:insert({ id='btn_size', type='button',    text='   Size: 0 0 0',
+      x=0,y=8, w=scrW,h=3, borderStyle='none', align='left'})
+  fillOptionsWindow:insert({ id='btn_flags', type='button',   text='  Flags: _',
+      x=0,y=12,w=scrW,h=3, borderStyle='none', align='left'})
+  fillOptionsWindow:insert(nextBtn)
+  
+  -- ==============================
+  -- Patterns
+  -- ==============================
+  local patternsWindow = {}
+  patternsWindow:insert({ id='patternsLabel', type='textPanel', text='Select pattern',
+      x=0,y=0, w=scrW,h=3, borderStyle='standart', align='center'})
+  
+  
+  
   while true do
-    local paramsLine = welcomingText
-    local separator = '----------------------\n'
-    local result = 0
-    local currLine = 'Select mode:\n'
-    local n = 1
+    KUI.setWindow(mainMenuWindow)
+    local idPressed = KUI.navigate()
     
-    for k,v in pairs(startupMode) do
-      currLine = currLine..' '..n..' - '..v..'\n'
-      n = n+1
-    end
-    result = readNumberParametr(paramsLine..currLine, 1, #startupMode)
-    local mode = startupMode[result]
-   
-   
-    if(mode == 'Lake drying') then
+    if idPressed == 'menuBtn_lake' then
+      
+      -- Check is we have bucket
       while turtle.getItemCount(1) == 0 do
-          clear()
-          print('Place buket in first slot')
+          KUI.setWindow({{ id='noBuketLabel', type='textPanel', text='Place buket in first slot',
+              x=8,y=scrH/2-3, w=scrW-16,h=6, borderStyle='standart', align='center'}})
           sleep(1)
       end
       
-      currLine = 'Specify size by x y z (z is deph), separate with spaces, and press ENTER:\n'
-      result = readTableOfNumbers(currLine, false, 3, "%S+")
+      -- Offer user to input size
+      KUI.setWindow({{ id='lakeLabel', type='textPanel',
+        text='Specify size by x y z (z is deph)\n, separate with spaces, and press ENTER:',
+        x=0,y=0, w=scrW,h=4, borderStyle='standart', align='center'}})
+      local result = readNumbersInput(3, 6, false, 3, "%S+")
       local sizeX,sizeY,sizeZ = result[1],result[2] ,result[3]
       
       
@@ -1028,47 +1117,53 @@ function init()
       Turtle.goTo(startPos)
       Turtle.setOrient(way.FORWARD)
     end
-   
-     
-   
-    if(mode == 'Fill') then
+    
+    
+    if idPressed == 'menuBtn_fill' then
+    
       local sizeX,sizeY,sizeZ 
       local pattern = nil
       local pos = vector.new(0,1,0) -- Trutle build start is block forward of it
       local fillFlags = {}
       
-      if not IDE then
-        paramsLine = paramsLine..'MODE:    Fill\n'
-        currLine = 'Select fill pattern:\n'
-        n = 1
-        for k,v in pairs(fillPattern) do
-          currLine = currLine..' '..n..' - '..k..'\n'
-          n = n+1
-        end
-        result = readNumberParametr(paramsLine..separator..currLine, 1, n)
-        n = 1
-        for k,v in pairs(fillPattern) do
-          if(n == result) then
-            pattern = k
-            paramsLine = paramsLine..'PATTERN: '..pattern..'\n'
-            break
+      local optionId, sender
+      while optionId ~= 'btn_next' or not pattern or not sizeX or not sizeY or not sizeZ do
+        KUI.setWindow(fillOptionsWindow)
+        optionId, sender = KUI.navigate()
+        
+        if     optionId == 'btn_pattern' then
+          local n = 1
+          local currLine = ''
+          for k,v in pairs(fillPattern) do
+            currLine = currLine..' '..n..' - '..k..'\n'
+            n = n+1
           end
-          n = n+1
+          local result = readNumberParametr(currLine, 1, n)
+          n = 1
+          for k,v in pairs(fillPattern) do
+            if(n == result) then
+              pattern = k
+              break
+            end
+            n = n+1
+          end
+        elseif optionId == 'btn_size' then
+          -- TODO: Fix clearing line with text "size"
+          local result = readNumbersInput(sender.x+9, sender.y, false, 3, "%S+")
+          sizeX,sizeY,sizeZ = result[1],result[2],result[3]
+        elseif optionId == 'btn_flags' then
+          KUI.setWindow({{ id='flags_label', type='textPanel',
+            text='Add flags if need, separate with commas, and press ENTER',
+            x=0,y=0, w=scrW,h=4, borderStyle='standart', align='center'}})
+          term.setCursorPos(3,6)
+          local result = readTable("%S+")
+          if(result) then fillFlags = makeSet(result) end
         end
-        
-        
-        currLine = 'Specify size by x y z, separate with spaces, and press ENTER:\n'
-        result = readTableOfNumbers(paramsLine..separator..currLine, false, 3, "%S+")
-        sizeX,sizeY,sizeZ = result[1],result[2],result[3]
-        paramsLine = paramsLine..'SIZE:    {'..sizeX..', '..sizeY..', '..sizeZ..'}\n'
-       
-       
-        currLine = 'Add flags if need, separate with commas, and press ENTER\n'
-        result = readTable(paramsLine..separator..currLine, true, "%s*([^,]+)")
-        if(result) then fillFlags = makeSet(result) end
-      else
-        sizeX,sizeY,sizeZ, pattern, pos, fillFlags =
-            5, 5, 9,'BoxGrid', pos, {}
+      end
+      
+      
+      if IDE then
+        sizeX,sizeY,sizeZ, pattern, pos, fillFlags = 5, 5, 9,'BoxGrid', pos, {}
       end
       
       
