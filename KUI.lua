@@ -110,28 +110,42 @@ function KUI.drawTextPanel(text, x,y, w,h, borderStyle, align)
   KUI.drawText(text, x+2,y+1, w-2,h, align)
 end
 
-
+-- ********************************************************************************** --
+-- Add gui element to current window
+-- ********************************************************************************** --
 function KUI.add(obj)
+
   -- Add additional info
-  obj.center = {x=obj.x+obj.w/2, y=obj.y+obj.h/2} 
-  obj.tabId  = #KUI.items
-  obj.isSelected = false
+  
+  obj.center = {x=obj.x+obj.w/2, y=obj.y+obj.h/2}
   
   obj.nextTab = KUI.items[1] or obj
   if(#KUI.items > 1) then KUI.items[#KUI.items - 1].nextTab = obj end
   
+  if obj.type == 'button' then
+    obj.selectable = true
+  end
+  
   table.insert(KUI.items, obj)
 end
 
-function KUI.setWindow(window)
+-- ********************************************************************************** --
+-- Set new window. Add all objects in list to screen
+-- ********************************************************************************** --
+function KUI.setWindow(window, selectedId)
   KUI.items = {}
+  KUI.selectedObj = nil
   for _,obj in pairs(window) do
     KUI.add(obj)
+    if obj.id == selectedId then KUI.selectedObj = obj end
   end
-  KUI.selectedObj = KUI.items[1]
+  KUI.selectedObj = KUI.selectedObj or KUI.items[1]
   KUI.draw()
 end
 
+-- ********************************************************************************** --
+-- Draw all objects in list
+-- ********************************************************************************** --
 function KUI.draw()
   term.clear()
   for _,obj in pairs(KUI.items) do
@@ -152,7 +166,7 @@ function KUI.draw()
     end
     
     -- This object is selected and selectable
-    if KUI.selectedObj == obj and obj.type == 'button' then
+    if KUI.selectedObj == obj and obj.selectable == true then
       KUI.drawPanel(obj.x,obj.y, obj.w,obj.h, 'selectedBtn')
     end
     
@@ -174,7 +188,10 @@ function KUI.navigate()
     elseif p1 == 205 then --RIGHT
       
     elseif p1 == 15  then --TAB
-      KUI.selectedObj = KUI.selectedObj.nextTab
+      local oldSelectedObj = KUI.selectedObj.nextTab
+      while KUI.selectedObj.selectable ~= true and oldSelectedObj ~= KUI.selectedObj do
+        KUI.selectedObj = KUI.selectedObj.nextTab
+      end
       KUI.draw()
     elseif p1 == 28  then --ENTER
       if KUI.selectedObj ~= nil then

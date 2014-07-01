@@ -1083,7 +1083,7 @@ function main()
       
       -- Check is we have bucket
       while turtle.getItemCount(1) == 0 do
-          KUI.setWindow({{ id='noBuketLabel', type='textPanel', text='Place buket in first slot',
+          KUI.setWindow({{ id='noBuketLabel', type='textPanel', text='Place buket in\nfirst slot',
               x=8,y=scrH/2-3, w=scrW-16,h=6, borderStyle='standart', align='center'}})
           sleep(1)
       end
@@ -1091,7 +1091,7 @@ function main()
       -- Offer user to input size
       KUI.setWindow({{ id='lakeLabel', type='textPanel',
         text='Specify size by x y z (z is deph)\n, separate with spaces, and press ENTER:',
-        x=0,y=0, w=scrW,h=4, borderStyle='standart', align='center'}})
+        x=0,y=0, w=scrW+2,h=4, borderStyle='standart', align='center'}})
       local result = readNumbersInput(3, 6, false, 3, "%S+")
       local sizeX,sizeY,sizeZ = result[1],result[2] ,result[3]
       
