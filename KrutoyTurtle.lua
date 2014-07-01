@@ -1041,7 +1041,7 @@ function main()
   local k=0
   for _,v in pairs(maiMenuBths) do
     table.insert(mainMenuWindow,{ id=v.id, type='button', text=v.text,
-        x=(scrW - #v.text)/2,y=4+k*2, w=#v.text,h=1, borderStyle='none', align='center'})
+        x=(scrW - #v.text)/2,y=5+k*2, w=#v.text,h=1, borderStyle='none', align='center'})
     k = k + 1
   end
   table.insert(mainMenuWindow,{ id='menuBtn_exit', type='button', text='EXIT',
@@ -1059,11 +1059,11 @@ function main()
       x=0,y=0, w=scrW+2,h=3, borderStyle='standart', align='center'})
       
   table.insert(fillOptionsWindow,{ id='btn_pattern', type='button', text='Pattern: ""',
-      x=1,y=4, w=scrW,h=1, borderStyle='none', align='left'})
+      x=3,y=4, w=scrW-2,h=1, borderStyle='none', align='left'})
   table.insert(fillOptionsWindow,{ id='btn_size', type='button',    text='   Size: 0 0 0',
-      x=1,y=6, w=scrW,h=1, borderStyle='none', align='left'})
+      x=3,y=6, w=scrW-2,h=1, borderStyle='none', align='left'})
   table.insert(fillOptionsWindow,{ id='btn_flags', type='button',   text='  Flags: _',
-      x=1,y=8, w=scrW,h=1, borderStyle='none', align='left'})
+      x=3,y=8, w=scrW-2,h=1, borderStyle='none', align='left'})
   table.insert(fillOptionsWindow,nextBtn)
   
   -- ==============================
@@ -1151,7 +1151,7 @@ function main()
           -- TODO: Fix clearing line with text "size"
           local result = readNumbersInput(sender.x+9, sender.y, false, 3, "%S+")
           sizeX,sizeY,sizeZ = result[1],result[2],result[3]
-          sender.text = '   Size: '..sizeX..' '..sizeY..' '..sizeZ
+          sender.text = '   Size: '..sizeX or '0'..' '..sizeY or '0'..' '..sizeZ or '0'
         elseif optionId == 'btn_flags' then
           KUI.setWindow({{ id='flags_label', type='textPanel',
             text='Add flags if need, separate with commas, and press ENTER',
@@ -1171,6 +1171,11 @@ function main()
       
       ---------------------------------------
       fill(sizeX,sizeY,sizeZ, pattern, pos, true, fillFlags)
+    end
+    
+    if idPressed == 'menuBtn_exit' then
+      clear()
+      return nil
     end
   end
 end

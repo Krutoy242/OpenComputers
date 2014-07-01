@@ -107,7 +107,7 @@ end
 function KUI.drawTextPanel(text, x,y, w,h, borderStyle, align)
   KUI.drawPanel(x,y, w,h, borderStyle)
   
-  KUI.drawText(text, x+2,y+1, w-2,h, align)
+  KUI.drawText(text, x,y+((h>1) and 1 or 0), w,h, align)
 end
 
 -- ********************************************************************************** --
@@ -161,16 +161,14 @@ function KUI.draw()
     elseif obj.type == 'textPanel' or obj.type == 'button' then
       KUI.drawTextPanel(obj.text, obj.x,obj.y, obj.w,obj.h, obj.borderStyle, obj.align)
     elseif obj.type == '' then
-      
-    elseif obj.type == '' then
-      
+    
     else
       
     end
     
     -- This object is selected and selectable
     if KUI.selectedObj == obj and obj.selectable == true then
-      KUI.drawPanel(obj.x,obj.y, obj.w,obj.h, 'inlineBtn')
+      KUI.drawPanel(obj.x-2,obj.y, obj.w+4,obj.h, 'inlineBtn')
     end
     
   end
