@@ -160,7 +160,7 @@ end
 function KUI.navigate()
   
   while true do
-    print('KUI.navigate()')
+    if KUI.selectedObj then print(KUI.selectedObj.id) end
     local e, p1 = os.pullEvent('key')
     if     p1 == 200 then --UP
 
