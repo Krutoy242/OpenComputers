@@ -1045,7 +1045,7 @@ function main()
     k = k + 1
   end
   table.insert(mainMenuWindow,{ id='menuBtn_exit', type='button', text='EXIT',
-      x=(scrW - #v.text)/2,y=scrH-1, w=4,h=1, borderStyle='none', align='center'})
+      x=(scrW - 4)/2,y=scrH-1, w=4,h=1, borderStyle='none', align='center'})
 
          
   -- ==============================
