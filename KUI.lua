@@ -91,7 +91,7 @@ function KUI.drawPanel(x,y, w,h, borderStyle)
   term.setCursorPos(x, y)
   term.write(styleArr[1]..repeatChar(styleArr[5], w-2)..styleArr[2])
   term.setCursorPos(x, y+h-1)
-  term.write(styleArr[3]..repeatChar(styleArr[6], w-2)..styleArr[4])
+  term.write(styleArr[4]..repeatChar(styleArr[6], w-2)..styleArr[3])
   
   -- Vertical lines
   for i=0,h-3 do
@@ -117,7 +117,7 @@ function KUI.add(obj)
   obj.tabId  = #KUI.items
   obj.isSelected = false
   
-  obj.nextTab = KUI.items or obj
+  obj.nextTab = KUI.items[1] or obj
   if(#KUI.items > 1) then KUI.items[#KUI.items - 1].nextTab = obj end
   
   table.insert(KUI.items, obj)
