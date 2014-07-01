@@ -117,6 +117,9 @@ function KUI.add(obj)
   obj.tabId  = #KUI.items
   obj.isSelected = false
   
+  obj.nextTab = KUI.items or obj
+  if(#KUI.items > 1) then KUI.items[#KUI.items - 1].next = obj end
+  
   table.insert(KUI.items, obj)
 end
 

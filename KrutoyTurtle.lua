@@ -1041,11 +1041,11 @@ function main()
   local k=0
   for _,v in pairs(maiMenuBths) do
     table.insert(mainMenuWindow,{ id=v.id, type='button', text=v.text,
-        x=5,y=6+k*3, w=scrW-10,h=3, borderStyle='none', align='center'})
+        x=5,y=6+k*2, w=scrW-10,h=3, borderStyle='none', align='center'})
     k = k + 1
   end
   table.insert(mainMenuWindow,{ id='menuBtn_exit', type='button', text='EXIT',
-      x=scrW/2-2,y=scrH-2, w=4,h=1, borderStyle='none', align='center'})
+      x=scrW/2-4,y=scrH-2, w=4,h=1, borderStyle='none', align='center'})
 
          
   -- ==============================
