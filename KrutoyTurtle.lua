@@ -1033,7 +1033,7 @@ function main()
   -- ==============================
   local mainMenuWindow = {} 
   table.insert(mainMenuWindow,{ id='welcomeLabel', type='textPanel', text='KRUTOY TURTLE',
-      x=3,y=2, w=scrW-6,h=5, borderStyle='standart', align='center'})
+      x=3,y=2, w=scrW-6,h=3, borderStyle='standart', align='center'})
   
   local maiMenuBths = { {id='menuBtn_fill', text='FILL (omg, its awesome!!!)'},
                         {id='menuBtn_lake', text='Refuel from Lake'} }

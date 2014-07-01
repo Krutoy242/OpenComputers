@@ -130,6 +130,7 @@ function KUI.setWindow(window)
 end
 
 function KUI.draw()
+  term.clear()
   for _,obj in pairs(KUI.items) do
     
     -- Switch type
