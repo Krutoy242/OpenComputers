@@ -118,7 +118,7 @@ function KUI.add(obj)
   obj.isSelected = false
   
   obj.nextTab = KUI.items or obj
-  if(#KUI.items > 1) then KUI.items[#KUI.items - 1].next = obj end
+  if(#KUI.items > 1) then KUI.items[#KUI.items - 1].nextTab = obj end
   
   table.insert(KUI.items, obj)
 end
@@ -174,15 +174,7 @@ function KUI.navigate()
     elseif p1 == 205 then --RIGHT
       
     elseif p1 == 15  then --TAB
-      for k,obj in pairs(KUI.items) do
-        if KUI.selectedObj == obj then
-          if KUI.items[k+1] ~= nil then
-            KUI.selectedObj = KUI.items[k+1]
-          else
-            KUI.selectedObj = KUI.items[1]
-          end
-        end
-      end
+      KUI.selectedObj = KUI.selectedObj.nextTab
       KUI.draw()
     elseif p1 == 28  then --ENTER
       if KUI.selectedObj ~= nil then
