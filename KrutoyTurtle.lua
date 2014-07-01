@@ -1052,18 +1052,18 @@ function main()
   -- Fill options
   -- ==============================
   local nextBtn = { id='btn_next', type='button',   text='Next>>',
-      x=scrW-12,y=scrH-2,w=10,h=1, borderStyle='none', align='center'}
+      x=scrW-10,y=scrH-1,w=10,h=1, borderStyle='none', align='center'}
   
   local fillOptionsWindow = {} 
   table.insert(fillOptionsWindow,{ id='optionsLabel', type='textPanel', text='Fill options',
-      x=0,y=0, w=scrW,h=3, borderStyle='standart', align='center'})
+      x=0,y=0, w=scrW+2,h=3, borderStyle='standart', align='center'})
       
   table.insert(fillOptionsWindow,{ id='btn_pattern', type='button', text='Pattern: ""',
-      x=0,y=5, w=scrW,h=3, borderStyle='none', align='left'})
+      x=1,y=4, w=scrW,h=3, borderStyle='none', align='left'})
   table.insert(fillOptionsWindow,{ id='btn_size', type='button',    text='   Size: 0 0 0',
-      x=0,y=8, w=scrW,h=3, borderStyle='none', align='left'})
+      x=1,y=6, w=scrW,h=3, borderStyle='none', align='left'})
   table.insert(fillOptionsWindow,{ id='btn_flags', type='button',   text='  Flags: _',
-      x=0,y=12,w=scrW,h=3, borderStyle='none', align='left'})
+      x=1,y=8,w=scrW,h=3, borderStyle='none', align='left'})
   table.insert(fillOptionsWindow,nextBtn)
   
   -- ==============================
