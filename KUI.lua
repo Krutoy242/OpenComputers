@@ -160,7 +160,7 @@ function KUI.draw()
   sleep(0)
 end
 
-function KUI.navigate()
+function KUI.navigate() 
   
   while true do
     if KUI.selectedObj then print(KUI.selectedObj.id) end
