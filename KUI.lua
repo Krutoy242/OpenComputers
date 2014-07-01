@@ -158,7 +158,9 @@ function KUI.draw()
 end
 
 function KUI.navigate()
+  
   while true do
+    print('KUI.navigate()')
     local e, p1 = os.pullEvent('key')
     if     p1 == 200 then --UP
 

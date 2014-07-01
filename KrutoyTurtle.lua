@@ -1041,7 +1041,7 @@ function main()
   local k=0
   for _,v in pairs(maiMenuBths) do
     table.insert(mainMenuWindow,{ id=v.id, type='button', text=v.text,
-        x=5,y=9+k*4, w=scrW-10,h=1, borderStyle='none', align='center'})
+        x=5,y=6+k*3, w=scrW-10,h=3, borderStyle='none', align='center'})
         
     k = k + 1
   end
