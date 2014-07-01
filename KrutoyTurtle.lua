@@ -1033,15 +1033,15 @@ function main()
   -- ==============================
   local mainMenuWindow = {} 
   table.insert(mainMenuWindow,{ id='welcomeLabel', type='textPanel', text='KRUTOY TURTLE',
-      x=3,y=2, w=scrW-6,h=3, borderStyle='standart', align='center'})
+      x=3,y=1, w=scrW-6,h=3, borderStyle='standart', align='center'})
   
-  local maiMenuBths = { {id='menuBtn_fill', text='FILL (omg, its awesome!!!)'},
+  local maiMenuBths = { {id='menuBtn_fill', text='FILL'},
                         {id='menuBtn_lake', text='Refuel from Lake'} }
   
   local k=0
   for _,v in pairs(maiMenuBths) do
     table.insert(mainMenuWindow,{ id=v.id, type='button', text=v.text,
-        x=5,y=6+k*2, w=scrW-10,h=3, borderStyle='none', align='center'})
+        x=5,y=4+k*2, w=scrW-10,h=3, borderStyle='none', align='center'})
     k = k + 1
   end
   table.insert(mainMenuWindow,{ id='menuBtn_exit', type='button', text='EXIT',
@@ -1076,7 +1076,7 @@ function main()
   
   
   while true do
-    KUI.setWindow(mainMenuWindow)
+    KUI.setWindow(mainMenuWindow, 'menuBtn_fill')
     local idPressed = KUI.navigate()
     
     if idPressed == 'menuBtn_lake' then

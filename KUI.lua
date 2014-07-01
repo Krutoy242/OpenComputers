@@ -120,7 +120,9 @@ function KUI.add(obj)
   obj.center = {x=obj.x+obj.w/2, y=obj.y+obj.h/2}
   
   obj.nextTab = KUI.items[1] or obj
-  if(#KUI.items > 1) then KUI.items[#KUI.items - 1].nextTab = obj end
+  if(#KUI.items >= 1) then 
+  KUI.items[#KUI.items].nextTab = obj 
+  end
   
   if obj.type == 'button' then
     obj.selectable = true
