@@ -139,6 +139,7 @@ function KUI.setWindow(window, selectedId)
   KUI.selectedObj = nil
   for _,obj in pairs(window) do
     KUI.add(obj)
+    
     if obj.id == selectedId then KUI.selectedObj = obj end
   end
   KUI.selectedObj = KUI.selectedObj or KUI.items[1]
@@ -169,7 +170,7 @@ function KUI.draw()
     
     -- This object is selected and selectable
     if KUI.selectedObj == obj and obj.selectable == true then
-      KUI.drawPanel(obj.x,obj.y, obj.w,obj.h, 'selectedBtn')
+      KUI.drawPanel(obj.x,obj.y, obj.w,obj.h, 'inlineBtn')
     end
     
   end

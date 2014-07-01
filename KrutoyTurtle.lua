@@ -1041,11 +1041,11 @@ function main()
   local k=0
   for _,v in pairs(maiMenuBths) do
     table.insert(mainMenuWindow,{ id=v.id, type='button', text=v.text,
-        x=5,y=4+k*2, w=scrW-10,h=3, borderStyle='none', align='center'})
+        x=(scrW - #v.text)/2,y=4+k*2, w=#v.text,h=1, borderStyle='none', align='center'})
     k = k + 1
   end
   table.insert(mainMenuWindow,{ id='menuBtn_exit', type='button', text='EXIT',
-      x=scrW/2-3,y=scrH-2, w=4,h=1, borderStyle='none', align='center'})
+      x=(scrW - #v.text)/2,y=scrH-1, w=4,h=1, borderStyle='none', align='center'})
 
          
   -- ==============================
@@ -1059,11 +1059,11 @@ function main()
       x=0,y=0, w=scrW+2,h=3, borderStyle='standart', align='center'})
       
   table.insert(fillOptionsWindow,{ id='btn_pattern', type='button', text='Pattern: ""',
-      x=1,y=4, w=scrW,h=3, borderStyle='none', align='left'})
+      x=1,y=4, w=scrW,h=1, borderStyle='none', align='left'})
   table.insert(fillOptionsWindow,{ id='btn_size', type='button',    text='   Size: 0 0 0',
-      x=1,y=6, w=scrW,h=3, borderStyle='none', align='left'})
+      x=1,y=6, w=scrW,h=1, borderStyle='none', align='left'})
   table.insert(fillOptionsWindow,{ id='btn_flags', type='button',   text='  Flags: _',
-      x=1,y=8,w=scrW,h=3, borderStyle='none', align='left'})
+      x=1,y=8, w=scrW,h=1, borderStyle='none', align='left'})
   table.insert(fillOptionsWindow,nextBtn)
   
   -- ==============================
@@ -1125,9 +1125,9 @@ function main()
       local pos = vector.new(0,1,0) -- Trutle build start is block forward of it
       local fillFlags = {}
       
-      local optionId, sender
+      local optionId, sender = 'btn_pattern', nil
       while optionId ~= 'btn_next' or not pattern or not sizeX or not sizeY or not sizeZ do
-        KUI.setWindow(fillOptionsWindow)
+        KUI.setWindow(fillOptionsWindow, optionId)
         optionId, sender = KUI.navigate()
         
         if     optionId == 'btn_pattern' then
@@ -1156,9 +1156,10 @@ function main()
           KUI.setWindow({{ id='flags_label', type='textPanel',
             text='Add flags if need, separate with commas, and press ENTER',
             x=0,y=0, w=scrW,h=4, borderStyle='standart', align='center'}})
-          term.setCursorPos(3,6)
+          term.setCursorPos(5,7)
           local result = readTable("%S+")
           if(result) then fillFlags = makeSet(result) end
+          sender.text = '  Flags: '..result
         end
       end
       
