@@ -88,10 +88,12 @@ function KUI.drawPanel(x,y, w,h, borderStyle)
   local styleArr = borderStyles[borderStyle]
   
   -- Horisontal lines
-  term.setCursorPos(x, y)
-  term.write(styleArr[1]..repeatChar(styleArr[5], w-2)..styleArr[2])
-  term.setCursorPos(x, y+h-1)
-  term.write(styleArr[4]..repeatChar(styleArr[6], w-2)..styleArr[3])
+  if(h > 1) then
+    term.setCursorPos(x, y)
+    term.write(styleArr[1]..repeatChar(styleArr[5], w-2)..styleArr[2])
+    term.setCursorPos(x, y+h-1)
+    term.write(styleArr[4]..repeatChar(styleArr[6], w-2)..styleArr[3])
+  end
   
   -- Vertical lines
   for i=0,h-3 do
