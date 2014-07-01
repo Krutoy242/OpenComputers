@@ -189,7 +189,8 @@ function KUI.navigate()
     elseif p1 == 205 then --RIGHT
       
     elseif p1 == 15  then --TAB
-      local oldSelectedObj = KUI.selectedObj.nextTab
+      local oldSelectedObj = KUI.selectedObj
+      KUI.selectedObj = KUI.selectedObj.nextTab
       while KUI.selectedObj.selectable ~= true and oldSelectedObj ~= KUI.selectedObj do
         KUI.selectedObj = KUI.selectedObj.nextTab
       end

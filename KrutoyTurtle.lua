@@ -1045,7 +1045,7 @@ function main()
     k = k + 1
   end
   table.insert(mainMenuWindow,{ id='menuBtn_exit', type='button', text='EXIT',
-      x=scrW/2-4,y=scrH-2, w=4,h=1, borderStyle='none', align='center'})
+      x=scrW/2-3,y=scrH-2, w=4,h=1, borderStyle='none', align='center'})
 
          
   -- ==============================
@@ -1146,10 +1146,12 @@ function main()
             end
             n = n+1
           end
+          sender.text = 'Pattern: '..pattern
         elseif optionId == 'btn_size' then
           -- TODO: Fix clearing line with text "size"
           local result = readNumbersInput(sender.x+9, sender.y, false, 3, "%S+")
           sizeX,sizeY,sizeZ = result[1],result[2],result[3]
+          sender.text = '   Size: '..sizeX..' '..sizeY..' '..sizeZ
         elseif optionId == 'btn_flags' then
           KUI.setWindow({{ id='flags_label', type='textPanel',
             text='Add flags if need, separate with commas, and press ENTER',
